@@ -38,41 +38,70 @@ dist_euclid <- function(x,y){
 
 matrice_moyenne <- function(X,Y){
   m <- length(X)
-  M <- matrix(rep(Inf,m),m, m)
+  M <- matrix(rep(NA,m),m, m)
   for(i in 1:m){
-    for(j in 1:i){
+    j=1
+    while(j<i){
       x1 <- cbind(X[i], Y[i])
       x2 <- cbind(X[j], Y[j])
       M[i,j] <- dist_euclid( x1, x2 )
+      j <- j+1
     }
   }
   return(M)
 }
 
-M<-matrice_moyenne(x,y)
-which.min(M[2:300,1])
-min(M[60,1])
-B <- diag(3)
+#nos classe de départ composé des singletons 
+classe <<- cbind(x,y)
 
-class_ascendate <- function(K,m){
+class_ascendate <- function(K){
+  M<-matrice_moyenne(x,y) 
+  m<- sqrt(length(M))
+  n<- sqrt(length(M))
   C <- diag(m)
-  #D <- dist(cbind(x,y), method="euclidean", diag=TRUE)
-  M<-matrice_moyenne(x,y)
-  min(M[,1])
-  m <- 300
   #  M <- matrice_moyenne(x,y)
-  for(i in 1:m){
-      i_proche <- i + which.min(M[(i+1):m,i]) # on cherche le voisin le plus proche
-      
+  #  for(i in 1:m){
+  #   i_proche <- i + which.min(M[(i+1):m,i]) # on cherche le voisin le plus proche
+  #  }
+  
+  while(m>K){
+    
+    #cherche indice du min
+    ind <- which.min(M) -1
+    i <- ind %% m +1 #ligne
+    j <- floor(ind/ m)+1 #colonne
+    
+    #mise a jour de la matrice C
+    C[i, ] <- C[i,] + C[j,]
+    
+    
+    #calcul des nouvelle classe
+    # classe[i,] <<- ( classe[i,] + classe[j,])/2
+    x_temp <- 0
+    y_temp <- 0
+    
+    for(k in 1:n){
+      if(C[i,k]>0) {
+        x_temp <- x_temp + x[k]
+        y_temp <- y_temp + y[k]
+      }
+    }
+    temp <- cbind(x_temp,y_temp)
+    
+    classe [i,] <<- temp / sum(C[i,])
+    
+    C <- C[-j,] 
+    classe <<- classe[-j,] # on enlève les points qui ne nous intéressent plus
+    
+    #mettre a jour les distances
+    M <- matrice_moyenne(classe[,1],classe[,2])
+    
+    m <- sqrt(length(M))
+    
   }
+  return (C)
 }
-
-#calculer la distance Euclidean
-D <- dist(cbind(x,y),method="euclidean")
-
-#la fonction de classification ascendante hiérarchique
-AscHierarchique <- hclust(D, method = "ward")
-
-plot(AscHierarchique, cex = 0.6, hang = -1)
-
-cluster = cutree(AscHierarchique,3)
+res <- class_ascendate(3)
+t(res)
+print(classe)
+points(classe[,1],classe[,2],pch=25, bg="grey")
