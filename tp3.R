@@ -99,9 +99,8 @@ class_ascendate <- function(K){
     m <- sqrt(length(M))
     
   }
-  return (C)
+  return (t(C))
 }
 res <- class_ascendate(3)
-t(res)
 print(classe)
 points(classe[,1],classe[,2],pch=25, bg="grey")
